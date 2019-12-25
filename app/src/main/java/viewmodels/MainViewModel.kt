@@ -1,5 +1,6 @@
 package viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -31,10 +32,12 @@ class MainViewModel : ViewModel() {
             try {
                 _status.value = GitApiStatus.LOADING
                 _result.value = deffered.await()
+                Log.e("MainViewModel", "Success" + result.value?.size)
                 _status.value = GitApiStatus.DONE
 
             } catch (ex: Exception) {
                 _status.value = GitApiStatus.ERROR
+                Log.e("MainViewModel", "Failure" + ex.localizedMessage)
             }
 
         }
