@@ -1,5 +1,6 @@
 package com.example.nayandemo.activities
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
@@ -23,8 +24,11 @@ class MainActivity : AppCompatActivity() {
         viewModel.getRepositories()
         viewModel.result.observe(this, Observer {
             if (it != null && it.size > 0) {
-                // val layoutManager = RecyclerView.LayoutManager(RecyclerView.LayoutManager.)
-                val repoAdapter = RepositoryAdapter(it)
+                val repoAdapter = RepositoryAdapter(it, RepositoryAdapter.RepoOnClickListener {
+                    val intentForDetails = Intent(this@MainActivity, DetailsActivity::class.java)
+                    intentForDetails.putExtra("repoData",it)
+                    startActivity(intentForDetails)
+                })
                 mainBinding.rvRepos.adapter = repoAdapter
 
             }
