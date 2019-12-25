@@ -3,6 +3,7 @@ package com.example.nayandemo.activities
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -10,6 +11,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.example.nayandemo.R
 import com.example.nayandemo.databinding.ActivityMainBinding
+import viewmodels.GitApiStatus
 import viewmodels.MainViewModel
 import java.util.*
 
@@ -33,6 +35,19 @@ class MainActivity : AppCompatActivity() {
                 })
                 mainBinding.rvRepos.adapter = repoAdapter
 
+            }
+        })
+        viewModel.status.observe(this, Observer {
+            when (it) {
+                GitApiStatus.ERROR -> {
+                    mainBinding.pb.visibility = View.GONE
+                }
+                GitApiStatus.LOADING -> {
+                    mainBinding.pb.visibility = View.VISIBLE
+                }
+                GitApiStatus.DONE -> {
+                    mainBinding.pb.visibility = View.GONE
+                }
             }
         })
     }
