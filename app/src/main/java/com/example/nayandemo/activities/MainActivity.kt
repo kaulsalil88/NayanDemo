@@ -14,5 +14,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val viewModel = ViewModelProviders.of(this)[MainViewModel::class.java]
+        viewModel.getRepositories()
     }
 }
