@@ -13,6 +13,8 @@ import com.example.nayandemo.databinding.ActivityMainBinding
 import viewmodels.MainViewModel
 import java.util.*
 
+const val KEY_REPO_DATA = "REPO_DATA"
+
 class MainActivity : AppCompatActivity() {
 
 
@@ -26,7 +28,7 @@ class MainActivity : AppCompatActivity() {
             if (it != null && it.size > 0) {
                 val repoAdapter = RepositoryAdapter(it, RepositoryAdapter.RepoOnClickListener {
                     val intentForDetails = Intent(this@MainActivity, DetailsActivity::class.java)
-                    intentForDetails.putExtra("repoData",it)
+                    intentForDetails.putExtra(KEY_REPO_DATA, it)
                     startActivity(intentForDetails)
                 })
                 mainBinding.rvRepos.adapter = repoAdapter

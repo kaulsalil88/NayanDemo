@@ -12,7 +12,7 @@ class DetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         detailsBinding = DataBindingUtil.setContentView(this, R.layout.activity_details)
-        detailsBinding.repo = intent.getParcelableExtra("repoData")
+        detailsBinding.repo = intent.getParcelableExtra(KEY_REPO_DATA)
 
     }
 }

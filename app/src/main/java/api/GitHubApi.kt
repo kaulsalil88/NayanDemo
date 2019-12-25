@@ -26,6 +26,7 @@ private val retrofit = Retrofit.Builder()
 
 interface GitHubApi {
 
+    //Add the various actions here .
     @GET("repositories?q=android+language:kotlin+language:java&sort=stars&order=desc")
     fun getPopularAndroidRepoAsync():Deferred<List<RepositoryDataClass>>
 }
