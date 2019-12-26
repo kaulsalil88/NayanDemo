@@ -10,7 +10,7 @@ data class RepositoryDataClass(
     val name: String?,
     val full_name: String?,
     val description: String?,
-    val stargazers_count: Long?
+    val stargazers_count: Int?
 ) : Parcelable {
 
 }

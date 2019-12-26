@@ -1,6 +1,7 @@
 package com.example.nayandemo.activities
 
 import android.content.Intent
+import android.graphics.Rect
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         val viewModel = ViewModelProviders.of(this)[MainViewModel::class.java]
+        mainBinding.rvRepos.addItemDecoration(MarginItemDecoration(resources.getDimension(R.dimen.default_padding).toInt()))
         viewModel.getRepositories()
         viewModel.result.observe(this, Observer {
             if (it != null && it.size > 0) {
@@ -50,5 +52,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+}
+
+
+class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
+    override fun getItemOffsets(outRect: Rect, view: View,
+                                parent: RecyclerView, state: RecyclerView.State) {
+        with(outRect) {
+            if (parent.getChildAdapterPosition(view) == 0) {
+                top = spaceHeight
+            }
+            left =  spaceHeight
+            right = spaceHeight
+            bottom = spaceHeight
+        }
     }
 }

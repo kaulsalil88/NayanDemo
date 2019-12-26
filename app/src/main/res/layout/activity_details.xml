@@ -12,14 +12,48 @@
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:padding="@dimen/default_padding"
         tools:context=".activities.DetailsActivity">
 
         <TextView
+            android:id="@+id/tv_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
             android:text="@{repo.name}"
+            android:textSize="@dimen/heading"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"></TextView>
+
+        <TextView
+            android:id="@+id/tv_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
+            android:text="@{repo.description}"
+            android:textSize="@dimen/heading"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_1"></TextView>
+
+        <TextView
+            android:id="@+id/tv_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
+            android:text="@{`Full Name :` + repo.full_name}"
+            android:textSize="@dimen/heading"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_2"></TextView>
+
+        <TextView
+            android:id="@+id/tv_4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/default_padding"
+            android:text="@{`Stargazers Count: ` + repo.stargazers_count}"
+            android:textSize="@dimen/heading"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_3"></TextView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
