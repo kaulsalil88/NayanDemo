@@ -71,7 +71,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         Log.e("MainViewModel", "Failure: " + ex.localizedMessage)
     }
 
-    private fun saveInPref(userid: String?, token: String?): Unit {
+     fun saveInPref(userid: String?, token: String?): Unit {
         val app = getApplication<Application>();
         val sharedPref = app.getSharedPreferences("myPref", Context.MODE_PRIVATE)
         sharedPref.edit {
@@ -82,7 +82,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    private fun getUserId(): String? {
+     fun getUserId(): String? {
         val app = getApplication<Application>();
         val sharedPref = app.getSharedPreferences("myPref", Context.MODE_PRIVATE)
         return sharedPref.getString(app.getString(R.string.userid), "")

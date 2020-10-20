@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.loginResult.observe(this, Observer {
             showServerResponse(it.toString())
             Log.d("MainActivity", it.toString())
+            viewModel.saveInPref(it.userid, it.token)
         })
 
     }
