@@ -79,9 +79,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val deferred = sharedPreferences.getString(
                 app.getString(R.string.userid), ""
             )?.let {
-                Log.d("MainViewMode user id ",it)
+                Log.d("MainViewMode user id ", it)
                 GitHubApiService.retrofitService.getUserAsync(
-                    it
+                    sharedPreferences.getString(
+                        app.getString(R.string.token), ""
+                    )!!, it
                 )
             }
             try {

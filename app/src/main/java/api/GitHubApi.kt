@@ -4,12 +4,11 @@ import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterF
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Deferred
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Path
+import retrofit2.http.*
 
 private val moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
@@ -23,10 +22,17 @@ private val moshi = Moshi.Builder()
 //http://10.02.2:3000 -> use this when testing on emulator
 //In case testing on actual device add the ip of local machine
 const val BASE_URL = "http://192.168.0.104:3000"
+private val httpLoggingInterceptor = HttpLoggingInterceptor()
+
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
     .addCallAdapterFactory(CoroutineCallAdapterFactory())
     .baseUrl(BASE_URL)
+    .client(
+        OkHttpClient().newBuilder()
+            .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+            .build()
+    )
     .build()
 
 
@@ -44,10 +50,14 @@ interface GitHubApi {
     fun loginUserAsync(@Body loginRequest: LoginRequest): Deferred<LoginResponse>
 
     @GET("/users/{userid}")
-    fun getUserAsync(@Path("userid") userId: String): Deferred<UserStepCount>
+    fun getUserAsync(
+        @Header("Bearer") token: String,
+        @Path("userid") userId: String
+    ): Deferred<UserStepCount>
 
     @POST("/users/{userid}/steps")
     fun updateUserStepsAsync(
+        @Header("Bearer") token: String,
         @Path("userid") userId: String,
         stepCount: StepCount
     ): Deferred<StepCount>

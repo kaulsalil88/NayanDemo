@@ -51,6 +51,9 @@ dependencies {
 
     // Retrofit Coroutines Support
     implementation "com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:$version_retrofit_coroutines_adapter"
+
+    //Retrofit Loggin Interceptor
+    implementation "com.squareup.okhttp3:logging-interceptor:3.8.0"
     //testing related dependencies
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
