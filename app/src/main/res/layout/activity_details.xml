@@ -23,7 +23,7 @@
             android:text="@{repo.name}"
             android:textSize="@dimen/heading"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"></TextView>
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
             android:id="@+id/tv_2"
@@ -33,7 +33,7 @@
             android:text="@{repo.description}"
             android:textSize="@dimen/heading"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_1"></TextView>
+            app:layout_constraintTop_toBottomOf="@id/tv_1"/>
 
         <TextView
             android:id="@+id/tv_3"
@@ -43,7 +43,7 @@
             android:text="@{`Full Name :` + repo.full_name}"
             android:textSize="@dimen/heading"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_2"></TextView>
+            app:layout_constraintTop_toBottomOf="@id/tv_2"/>
 
         <TextView
             android:id="@+id/tv_4"
@@ -53,7 +53,7 @@
             android:text="@{`Stargazers Count: ` + repo.stargazers_count}"
             android:textSize="@dimen/heading"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_3"></TextView>
+            app:layout_constraintTop_toBottomOf="@id/tv_3"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
