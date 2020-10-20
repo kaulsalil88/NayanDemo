@@ -20,8 +20,9 @@ private val moshi = Moshi.Builder()
  * object.
  */
 
-//http://10.02.2:300
-const val BASE_URL = "http://10.0.2.2:3000"
+//http://10.02.2:3000 -> use this when testing on emulator
+//In case testing on actual device add the ip of local machine
+const val BASE_URL = "http://192.168.0.104:3000"
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
     .addCallAdapterFactory(CoroutineCallAdapterFactory())
