@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import api.GitHubApiService
+import api.LoginRequest
+import api.LoginResponse
 import api.RepositoryDataClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +23,8 @@ class MainViewModel : ViewModel() {
     private val _status = MutableLiveData<GitApiStatus>()
     val status: LiveData<GitApiStatus> get() = _status
 
+    private val _loginResult = MutableLiveData<LoginResponse>()
+    val loginResult: LiveData<LoginResponse> get() = _loginResult
     private var viewModelJob = Job()
 
     // the Coroutine runs using the Main (UI) dispatcher
@@ -36,10 +40,29 @@ class MainViewModel : ViewModel() {
                 _status.value = GitApiStatus.DONE
 
             } catch (ex: Exception) {
-                _status.value = GitApiStatus.ERROR
-                Log.e("MainViewModel", "Failure" + ex.localizedMessage)
+                onApiError(ex)
             }
 
         }
+    }
+
+    fun loginUser() {
+        coroutineScope.launch {
+            val deferred =
+                GitHubApiService.retrofitService.loginUserAsync(LoginRequest("test", "test"))
+            try {
+                _status.value = GitApiStatus.LOADING
+                _loginResult.value = deferred.await()
+                _status.value = GitApiStatus.DONE
+
+            } catch (ex: Exception) {
+                onApiError(ex)
+            }
+        }
+    }
+
+    private fun onApiError(ex: Exception) {
+        _status.value = GitApiStatus.ERROR
+        Log.e("MainViewModel", "Failure" + ex.localizedMessage)
     }
 }

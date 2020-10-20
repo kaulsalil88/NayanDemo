@@ -6,8 +6,10 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Deferred
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
-import java.util.*
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 private val moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
@@ -17,20 +19,39 @@ private val moshi = Moshi.Builder()
  * Use the Retrofit builder to build a retrofit object using a Moshi converter with our Moshi
  * object.
  */
-const val BASE_URL = "https://api.github.com/"
+
+//http://10.02.2:300
+const val BASE_URL = "http://10.02.2:300"
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
     .addCallAdapterFactory(CoroutineCallAdapterFactory())
     .baseUrl(BASE_URL)
     .build()
 
+
+/*POST /sessions/new { “email”: “:email”, “password”: “:password”} -> { “userid”: “:userid”, “token”: “:token” }
+• GET /users/:userid -> { “email”: “:email”, “step_count”: “:step_count” }
+• POST /users/:userid/steps { “step_count”: “:step_count” } ->  { “step_count”: “:step_count” }*/
+
 interface GitHubApi {
 
     //Add the various actions here .
     @GET("repositories?q=android+language:kotlin+language:java&sort=stars&order=desc")
-    fun getPopularAndroidRepoAsync():Deferred<List<RepositoryDataClass>>
+    fun getPopularAndroidRepoAsync(): Deferred<List<RepositoryDataClass>>
+
+    @POST("session/new")
+    fun loginUserAsync(@Body loginRequest: LoginRequest): Deferred<LoginResponse>
+
+    @GET("/users/{userid}")
+    fun getUserAsync(@Path("userid") userId: String): Deferred<UserStepCount>
+
+    @POST("/users/{userid}/steps")
+    fun updateUserStepsAsync(
+        @Path("userid") userId: String,
+        stepCount: StepCount
+    ): Deferred<StepCount>
 }
 
 object GitHubApiService {
-    val retrofitService : GitHubApi by lazy { retrofit.create(GitHubApi::class.java) }
+    val retrofitService: GitHubApi by lazy { retrofit.create(GitHubApi::class.java) }
 }
