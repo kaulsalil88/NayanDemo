@@ -29,11 +29,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         val viewModel = ViewModelProviders.of(this)[MainViewModel::class.java]
-        mainBinding.rvRepos.addItemDecoration(
-            MarginItemDecoration(
-                resources.getDimension(R.dimen.default_padding).toInt()
-            )
-        )
+
         testUser(viewModel)
         viewModel.status.observe(this, Observer {
             when (it) {
@@ -48,6 +44,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+        mainBinding.btSecondApi.setOnClickListener {
+            //Call second API
+            viewModel.fetchStepCount()
+        }
+
+        mainBinding.bt3Api.setOnClickListener {
+            //Call 3 rd API .
+        }
     }
 
     private fun testUser(viewModel: MainViewModel) {
@@ -60,20 +64,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun interActWithGit(viewModel: MainViewModel) {
-        viewModel.getRepositories()
-        viewModel.result.observe(this, Observer {
-            if (it != null && it.size > 0) {
-                val repoAdapter = RepositoryAdapter(it, RepositoryAdapter.RepoOnClickListener {
-                    val intentForDetails = Intent(this@MainActivity, DetailsActivity::class.java)
-                    intentForDetails.putExtra(KEY_REPO_DATA, it)
-                    startActivity(intentForDetails)
-                })
-                mainBinding.rvRepos.adapter = repoAdapter
 
-            }
-        })
-    }
 
     private fun showServerResponse(response: String) {
         Toast.makeText(mainBinding.root.context, response, Toast.LENGTH_LONG).show()
