@@ -21,7 +21,7 @@ private val moshi = Moshi.Builder()
  */
 
 //http://10.02.2:300
-const val BASE_URL = "http://10.02.2:300"
+const val BASE_URL = "http://10.0.2.2:3000"
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
     .addCallAdapterFactory(CoroutineCallAdapterFactory())
@@ -39,7 +39,7 @@ interface GitHubApi {
     @GET("repositories?q=android+language:kotlin+language:java&sort=stars&order=desc")
     fun getPopularAndroidRepoAsync(): Deferred<List<RepositoryDataClass>>
 
-    @POST("session/new")
+    @POST("/session/new")
     fun loginUserAsync(@Body loginRequest: LoginRequest): Deferred<LoginResponse>
 
     @GET("/users/{userid}")

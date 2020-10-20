@@ -63,6 +63,6 @@ class MainViewModel : ViewModel() {
 
     private fun onApiError(ex: Exception) {
         _status.value = GitApiStatus.ERROR
-        Log.e("MainViewModel", "Failure" + ex.localizedMessage)
+        Log.e("MainViewModel", "Failure: " + ex.localizedMessage)
     }
 }
