@@ -1,23 +1,23 @@
 package com.example.nayandemo.activities
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import com.example.nayandemo.R
 import com.example.nayandemo.databinding.ActivityMainBinding
 import viewmodels.GitApiStatus
 import viewmodels.MainViewModel
-import java.util.*
+
 
 const val KEY_REPO_DATA = "REPO_DATA"
 
@@ -77,6 +77,8 @@ class MainActivity : AppCompatActivity() {
     private fun showServerResponse(response: String) {
         Toast.makeText(mainBinding.root.context, response, Toast.LENGTH_LONG).show()
     }
+
+
 }
 
 

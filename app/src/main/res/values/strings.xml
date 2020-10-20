@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NayanDemo</string>
+    <string name="userid">userid</string>
+    <string name="token">token</string>
 </resources>
