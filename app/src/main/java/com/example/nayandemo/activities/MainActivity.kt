@@ -1,16 +1,12 @@
 package com.example.nayandemo.activities
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -20,7 +16,9 @@ import com.example.nayandemo.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessOptions
+import com.google.android.gms.fitness.data.DataSet
 import com.google.android.gms.fitness.data.DataType
+import com.google.android.gms.fitness.data.Field
 import com.google.android.gms.fitness.request.DataReadRequest
 import viewmodels.GitApiStatus
 import viewmodels.MainViewModel
@@ -92,8 +90,10 @@ class MainActivity : AppCompatActivity() {
                 fitnessOptions
             );
         } else {
-            accessGoogleFit();
+            //accessGoogleFit();
+            getTotalSteps()
         }
+        //ToDo: Where will this code go ??
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
 //            != PackageManager.PERMISSION_GRANTED
 //        ) {
@@ -114,7 +114,8 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
             if (requestCode == MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION) {
-                accessGoogleFit()
+                //accessGoogleFit()
+                getTotalSteps()
             }
         }
     }
@@ -137,8 +138,26 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener { response ->
                 // Use response data here
                 Log.d("MainActivity", "OnSuccess()")
+
             }
             .addOnFailureListener { e -> Log.d("MainActivity", "OnFailure()", e) }
+    }
+
+    private fun getTotalSteps() {
+        Fitness.getHistoryClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
+            .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
+            .addOnSuccessListener { result: DataSet ->
+                val totalSteps =
+                    if (result.isEmpty) 0 else result.dataPoints[0].getValue(Field.FIELD_STEPS)
+                        .asInt()
+                Log.e("MainActivity", "Step Count:" + totalSteps)
+            }
+            .addOnFailureListener { e: Exception ->
+                Log.i(
+                    "MainActivity", "There was a problem getting steps: " +
+                            e.localizedMessage
+                )
+            }
     }
 
     private fun showServerResponse(response: String) {
