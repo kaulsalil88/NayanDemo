@@ -3,7 +3,6 @@ package com.example.nayandemo.activities
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -14,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.RecyclerView
 import com.example.nayandemo.R
 import com.example.nayandemo.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -37,6 +35,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     private val MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION: Int = 100
     private val PERMISSION_GOOGLE_SIGN_IN: Int = 101
+    private lateinit var fitnessOptions: FitnessOptions;
 
     lateinit var mainBinding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,15 +57,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 }
             }
         })
-        mainBinding.btSecondApi.setOnClickListener {
-            //Call second API
-            viewModel.fetchStepCount()
-        }
 
-        mainBinding.bt3Api.setOnClickListener {
-            //Call 3 rd API .
-            updateStepCount()
-        }
     }
 
     private fun testUser(viewModel: MainViewModel) {
@@ -81,7 +72,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     //Google Fit Related Code.
 
-    lateinit var fitnessOptions: FitnessOptions;
+
     private fun updateStepCount() {
         //Check for the ACTIVITY_RECOGNITION
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
@@ -161,6 +152,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             .addOnFailureListener { e -> Log.d("MainActivity", "OnFailure()", e) }
     }
 
+    //This function will fetch the current no of steps from the Google Fitness API .
     private fun getTotalSteps() {
         Fitness.getHistoryClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
             .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
@@ -178,6 +170,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             }
     }
 
+    //This function turns on the sensor in the background which will increase the step count
     private fun recordSteps() {
         Fitness.getRecordingClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
             .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
@@ -224,6 +217,18 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     override fun onStop() {
         super.onStop()
         //Unsubscribe from the Google Fitness subscription
+        Fitness.getRecordingClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
+            .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)
+            .addOnSuccessListener { unused: Void? ->
+                Log.i(
+                    "MainActivity",
+                    "Successfully unsubscribed."
+                )
+            }
+            .addOnFailureListener { e: java.lang.Exception? ->
+                // Subscription not removed
+                Log.i("MainActivity", "Failed to unsubscribe.")
+            }
     }
 
 
