@@ -1,12 +1,16 @@
 package com.example.nayandemo.activities
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -32,6 +36,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private val MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION: Int = 100
+    private val PERMISSION_GOOGLE_SIGN_IN: Int = 101
+
     lateinit var mainBinding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,34 +83,37 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var fitnessOptions: FitnessOptions;
     private fun updateStepCount() {
-        fitnessOptions = FitnessOptions.builder()
-            .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-            .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-            .build()
-        val account = GoogleSignIn.getAccountForExtension(this, fitnessOptions)
-        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-            GoogleSignIn.requestPermissions(
-                this, // your activity
-                MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION, // e.g. 1
-                account,
-                fitnessOptions
+        //Check for the ACTIVITY_RECOGNITION
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permission is not granted
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACTIVITY_RECOGNITION),
+                MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION
             );
+
         } else {
-            //accessGoogleFit();
-            getTotalSteps()
+            //The ACTIVITY_RECOGNITION has been granted we need to check the Google account permission
+            fitnessOptions = FitnessOptions.builder()
+                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+                .build()
+            val account = GoogleSignIn.getAccountForExtension(this, fitnessOptions)
+            if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+                GoogleSignIn.requestPermissions(
+                    this, // your activity
+                    PERMISSION_GOOGLE_SIGN_IN, // e.g. 1
+                    account,
+                    fitnessOptions
+                );
+            } else {
+                //accessGoogleFit();
+                getTotalSteps()
+                recordSteps()
+            }
         }
-        //ToDo: Where will this code go ??
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
-//            != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            // Permission is not granted
-//            ActivityCompat.requestPermissions(
-//                this,
-//                arrayOf(Manifest.permission.ACTIVITY_RECOGNITION),
-//                MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION
-//            );
-//
-//        }
 
 
     }
@@ -113,9 +122,10 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
-            if (requestCode == MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION) {
+            if (requestCode == PERMISSION_GOOGLE_SIGN_IN) {
                 //accessGoogleFit()
                 getTotalSteps()
+                recordSteps()
             }
         }
     }
@@ -156,6 +166,24 @@ class MainActivity : AppCompatActivity() {
                 Log.i(
                     "MainActivity", "There was a problem getting steps: " +
                             e.localizedMessage
+                )
+            }
+    }
+
+    private fun recordSteps() {
+        Fitness.getRecordingClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
+            .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
+            .addOnSuccessListener { unused: Void? ->
+                Log.i(
+                    "MainActivity",
+                    "Successfully subscribed!"
+                )
+            }
+            .addOnFailureListener { e: java.lang.Exception? ->
+                e?.printStackTrace()
+                Log.i(
+                    "MainActivity",
+                    "There was a problem subscribing."
                 )
             }
     }
