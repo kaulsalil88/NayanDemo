@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit
 
 const val KEY_REPO_DATA = "REPO_DATA"
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
 
     private val MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION: Int = 100
@@ -95,27 +95,31 @@ class MainActivity : AppCompatActivity() {
             );
 
         } else {
-            //The ACTIVITY_RECOGNITION has been granted we need to check the Google account permission
-            fitnessOptions = FitnessOptions.builder()
-                .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-                .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
-                .build()
-            val account = GoogleSignIn.getAccountForExtension(this, fitnessOptions)
-            if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
-                GoogleSignIn.requestPermissions(
-                    this, // your activity
-                    PERMISSION_GOOGLE_SIGN_IN, // e.g. 1
-                    account,
-                    fitnessOptions
-                );
-            } else {
-                //accessGoogleFit();
-                getTotalSteps()
-                recordSteps()
-            }
+            googleSignInAndAccessGoogleFitnessData()
         }
 
 
+    }
+
+    fun googleSignInAndAccessGoogleFitnessData() {
+        //The ACTIVITY_RECOGNITION has been granted we need to check the Google account permission
+        fitnessOptions = FitnessOptions.builder()
+            .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+            .addDataType(DataType.AGGREGATE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+            .build()
+        val account = GoogleSignIn.getAccountForExtension(this, fitnessOptions)
+        if (!GoogleSignIn.hasPermissions(account, fitnessOptions)) {
+            GoogleSignIn.requestPermissions(
+                this, // your activity
+                PERMISSION_GOOGLE_SIGN_IN, // e.g. 1
+                account,
+                fitnessOptions
+            )
+        } else {
+            //accessGoogleFit();
+            getTotalSteps()
+            recordSteps()
+        }
     }
 
     @Override
@@ -126,7 +130,11 @@ class MainActivity : AppCompatActivity() {
                 //accessGoogleFit()
                 getTotalSteps()
                 recordSteps()
+            } else {
+                permissionNotGranted(this, "User didnt grant GOOGLE ACCOUNT permission")
             }
+        } else {
+            permissionNotGranted(this, "User didnt grant GOOGLE ACCOUNT permission")
         }
     }
 
@@ -188,26 +196,38 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            googleSignInAndAccessGoogleFitnessData()
+        } else {
+            permissionNotGranted(this, "User didnt grant ACTIVITY_RECOGNITION permission")
+        }
+    }
+
     private fun showServerResponse(response: String) {
         Toast.makeText(mainBinding.root.context, response, Toast.LENGTH_LONG).show()
     }
 
+    private fun permissionNotGranted(activity: MainActivity, message: String) {
+        Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+        finish()
 
-}
-
-
-class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
-    override fun getItemOffsets(
-        outRect: Rect, view: View,
-        parent: RecyclerView, state: RecyclerView.State
-    ) {
-        with(outRect) {
-            if (parent.getChildAdapterPosition(view) == 0) {
-                top = spaceHeight
-            }
-            left = spaceHeight
-            right = spaceHeight
-            bottom = spaceHeight
-        }
     }
+
+
+    override fun onStop() {
+        super.onStop()
+        //Unsubscribe from the Google Fitness subscription
+    }
+
+
 }
+
+
+
