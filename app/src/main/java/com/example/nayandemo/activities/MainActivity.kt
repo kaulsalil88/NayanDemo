@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -57,6 +58,9 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 }
             }
         })
+
+        //Logic to determin which elements to show on the screen .
+        toggleLoginScreenElementsVisibility(isLoggedIn())
 
     }
 
@@ -211,6 +215,34 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
         finish()
 
+    }
+
+    //Function to toggle the visibility
+    fun toggleLoginScreenElementsVisibility(isVisible: Boolean) {
+        if (isVisible) {
+            mainBinding.tvEmail.visibility = View.VISIBLE
+            mainBinding.tvPassword.visibility = View.VISIBLE
+            mainBinding.etEmail.visibility = View.VISIBLE
+            mainBinding.etPassword.visibility = View.VISIBLE
+        } else {
+            mainBinding.tvEmail.visibility = View.GONE
+            mainBinding.tvPassword.visibility = View.GONE
+            mainBinding.etEmail.visibility = View.GONE
+            mainBinding.etPassword.visibility = View.GONE
+
+        }
+
+
+    }
+
+
+    fun isLoggedIn(): Boolean {
+        return TextUtils.isEmpty(
+            getSharedPreferences("myPref").getString(
+                getString(R.string.token),
+                ""
+            )
+        )
     }
 
 
