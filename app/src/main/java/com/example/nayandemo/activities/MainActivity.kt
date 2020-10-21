@@ -37,13 +37,12 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private val MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION: Int = 100
     private val PERMISSION_GOOGLE_SIGN_IN: Int = 101
     private lateinit var fitnessOptions: FitnessOptions;
-
+    private lateinit var viewModel: MainViewModel
     lateinit var mainBinding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        val viewModel = ViewModelProviders.of(this)[MainViewModel::class.java]
-
+        viewModel = ViewModelProviders.of(this)[MainViewModel::class.java]
         //testUser(viewModel)
         viewModel.status.observe(this, Observer {
             when (it) {
@@ -60,12 +59,14 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         })
 
         //Logic to determin which elements to show on the screen .
+        mainBinding.pb.visibility = View.GONE
         toggleLoginScreenElementsVisibility(isLoggedIn())
+        mainBinding.btLogin.setOnClickListener { login() }
 
     }
 
-    private fun testUser(viewModel: MainViewModel) {
-        viewModel.loginUser()
+    private fun setUpObservers() {
+
         viewModel.loginResult.observe(this, Observer {
             showServerResponse(it.toString())
             Log.d("MainActivity", it.toString())
@@ -224,11 +225,21 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             mainBinding.tvPassword.visibility = View.VISIBLE
             mainBinding.etEmail.visibility = View.VISIBLE
             mainBinding.etPassword.visibility = View.VISIBLE
+            mainBinding.btLogin.visibility = View.VISIBLE
+            //Elements for step
+            mainBinding.stepBtRecord.visibility = View.GONE
+            mainBinding.stepEtLabel.visibility = View.GONE
+            mainBinding.stepEtCount.visibility = View.GONE
         } else {
             mainBinding.tvEmail.visibility = View.GONE
             mainBinding.tvPassword.visibility = View.GONE
             mainBinding.etEmail.visibility = View.GONE
             mainBinding.etPassword.visibility = View.GONE
+            mainBinding.btLogin.visibility = View.GONE
+            //Elements for step
+            mainBinding.stepBtRecord.visibility = View.VISIBLE
+            mainBinding.stepEtLabel.visibility = View.VISIBLE
+            mainBinding.stepEtCount.visibility = View.VISIBLE
 
         }
 
@@ -236,15 +247,24 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     }
 
 
-    fun isLoggedIn(): Boolean {
+    private fun isLoggedIn(): Boolean {
         return TextUtils.isEmpty(
-            getSharedPreferences("myPref").getString(
+            getSharedPreferences("myPref", MODE_PRIVATE).getString(
                 getString(R.string.token),
                 ""
             )
         )
     }
 
+    fun login() {
+        if (TextUtils.isEmpty(mainBinding.etEmail.text) && TextUtils.isEmpty(mainBinding.etPassword.text)) {
+            viewModel.loginUser(mainBinding.etEmail.text.toString(), mainBinding.etPassword.text.toString())
+
+        } else {
+            Toast.makeText(this, "Please enter both email and password", Toast.LENGTH_LONG).show()
+        }
+
+    }
 
     override fun onStop() {
         super.onStop()

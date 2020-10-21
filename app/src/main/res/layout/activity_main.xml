@@ -46,6 +46,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_password" />
 
+        <Button
+            android:id="@+id/bt_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Login"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/et_password" />
+
         <ProgressBar
             android:id="@+id/pb"
             android:layout_width="wrap_content"
@@ -55,8 +63,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_editor_absoluteX="195dp" />
+
         <TextView
-            android:id="@+id/et_label"
+            android:id="@+id/step_et_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="No Of Step"
@@ -64,7 +73,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/et_step_count"
+            android:id="@+id/step_et_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_between_elements"
@@ -75,6 +84,7 @@
             app:layout_constraintTop_toBottomOf="@+id/et_label" />
 
         <Button
+            android:id="@+id/step_bt_record"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_between_elements"

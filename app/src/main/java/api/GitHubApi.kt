@@ -63,6 +63,6 @@ interface GitHubApi {
     ): Deferred<StepCount>
 }
 
-object GitHubApiService {
+object StepCountApiService {
     val retrofitService: GitHubApi by lazy { retrofit.create(GitHubApi::class.java) }
 }

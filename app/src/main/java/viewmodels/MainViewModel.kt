@@ -44,7 +44,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getRepositories() {
         coroutineScope.launch {
-            val deffered = GitHubApiService.retrofitService.getPopularAndroidRepoAsync()
+            val deffered = StepCountApiService.retrofitService.getPopularAndroidRepoAsync()
             try {
                 _status.value = GitApiStatus.LOADING
                 _result.value = deffered.await()
@@ -58,10 +58,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loginUser() {
+    fun loginUser(email: String, password: String) {
         coroutineScope.launch {
             val deferred =
-                GitHubApiService.retrofitService.loginUserAsync(LoginRequest("test", "test"))
+                StepCountApiService.retrofitService.loginUserAsync(LoginRequest(email, password))
             try {
                 _status.value = GitApiStatus.LOADING
                 _loginResult.value = deferred.await()
@@ -80,7 +80,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 app.getString(R.string.userid), ""
             )?.let {
                 Log.d("MainViewMode user id ", it)
-                GitHubApiService.retrofitService.getUserAsync(
+                StepCountApiService.retrofitService.getUserAsync(
                     sharedPreferences.getString(
                         app.getString(R.string.token), ""
                     )!!, it
