@@ -27,11 +27,8 @@ import com.google.android.gms.fitness.FitnessOptions
 import com.google.android.gms.fitness.data.DataSet
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.gms.fitness.data.Field
-import com.google.android.gms.fitness.request.DataReadRequest
 import viewmodels.GitApiStatus
 import viewmodels.MainViewModel
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 const val KEY_REPO_DATA = "REPO_DATA"
@@ -124,7 +121,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private fun startSensor() {
         if (isLoggedIn() && isSensorPresent) {
             if (isSensorPresent) {
-                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
+                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
             }
         }
     }
@@ -266,20 +263,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     }
 
     //Function to toggle the visibility
-    fun toggleLoginScreenElementsVisibility(isVisible: Boolean) {
-        if (isVisible) {
-            mainBinding.tvEmail.visibility = View.VISIBLE
-            mainBinding.tvPassword.visibility = View.VISIBLE
-            mainBinding.etEmail.visibility = View.VISIBLE
-            mainBinding.etPassword.visibility = View.VISIBLE
-            mainBinding.btLogin.visibility = View.VISIBLE
-            //Elements for step
-            mainBinding.stepBtRecord.visibility = View.GONE
-            mainBinding.stepEtLabel.visibility = View.GONE
-            mainBinding.stepEtCount.visibility = View.GONE
-            mainBinding.stepSensorCount.visibility = View.GONE
-            mainBinding.stepBtUpdateServer.visibility = View.GONE
-        } else {
+    fun toggleLoginScreenElementsVisibility(isLoggedIn: Boolean) {
+        if (isLoggedIn) {
             mainBinding.tvEmail.visibility = View.GONE
             mainBinding.tvPassword.visibility = View.GONE
             mainBinding.etEmail.visibility = View.GONE
@@ -291,6 +276,19 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             mainBinding.stepEtCount.visibility = View.VISIBLE
             mainBinding.stepSensorCount.visibility = View.VISIBLE
             mainBinding.stepBtUpdateServer.visibility = View.VISIBLE
+        } else {
+            mainBinding.tvEmail.visibility = View.VISIBLE
+            mainBinding.tvEmail.visibility = View.VISIBLE
+            mainBinding.tvPassword.visibility = View.VISIBLE
+            mainBinding.etEmail.visibility = View.VISIBLE
+            mainBinding.etPassword.visibility = View.VISIBLE
+            mainBinding.btLogin.visibility = View.VISIBLE
+            //Elements for step
+            mainBinding.stepBtRecord.visibility = View.GONE
+            mainBinding.stepEtLabel.visibility = View.GONE
+            mainBinding.stepEtCount.visibility = View.GONE
+            mainBinding.stepSensorCount.visibility = View.GONE
+            mainBinding.stepBtUpdateServer.visibility = View.GONE
 
         }
 
@@ -299,7 +297,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
 
     private fun isLoggedIn(): Boolean {
-        return TextUtils.isEmpty(
+        return !TextUtils.isEmpty(
             getSharedPreferences(PREF_NAME, MODE_PRIVATE).getString(
                 PREF_KEY_TOKEN,
                 ""
