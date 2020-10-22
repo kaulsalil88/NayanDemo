@@ -21,7 +21,7 @@ private val moshi = Moshi.Builder()
 
 //http://10.02.2:3000 -> use this when testing on emulator
 //In case testing on actual device add the ip of local machine
-const val BASE_URL = "http://192.168.0.103:3000"
+const val BASE_URL = "http://192.168.0.100:3000"
 private val httpLoggingInterceptor = HttpLoggingInterceptor()
 
 private val retrofit = Retrofit.Builder()

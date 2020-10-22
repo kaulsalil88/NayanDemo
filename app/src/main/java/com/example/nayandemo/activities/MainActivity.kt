@@ -24,11 +24,14 @@ import com.example.nayandemo.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessOptions
-import com.google.android.gms.fitness.data.DataSet
-import com.google.android.gms.fitness.data.DataType
-import com.google.android.gms.fitness.data.Field
+import com.google.android.gms.fitness.data.*
+import com.google.android.gms.fitness.request.DataUpdateRequest
+
+import com.google.android.gms.tasks.Task
 import viewmodels.GitApiStatus
 import viewmodels.MainViewModel
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 const val KEY_REPO_DATA = "REPO_DATA"
@@ -121,7 +124,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private fun startSensor() {
         if (isLoggedIn() && isSensorPresent) {
             if (isSensorPresent) {
-                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
+                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
             }
         }
     }
@@ -358,7 +361,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         super.onStop()
         //Unsubscribe from the Google Fitness subscription
         getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit()
-            .putInt("step_count", mainBinding.stepEtCount.text.toString().toInt())
+            .putInt(PREF_KEY_STEP_COUNT, mainBinding.stepEtCount.text.toString().toInt())
 
         unsubscribeFromGoogleFitness()
         unsubscribeFromSensor()
@@ -366,6 +369,56 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
+    }
+
+    fun updateGoogleFitWithLatestStepCount(){
+        val cal: Calendar = Calendar.getInstance()
+        val now = Date()
+        cal.setTime(now)
+        cal.add(Calendar.MINUTE, 0)
+        val endTime: Long = cal.getTimeInMillis()
+        cal.add(Calendar.MINUTE, -50)
+        val startTime: Long = cal.getTimeInMillis()
+
+// Create a data source
+
+// Create a data source
+        val dataSource: DataSource = DataSource.Builder()
+            .setAppPackageName(this)
+            .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+            .setStreamName("MainActivity" + " - step count")
+            .setType(DataSource.TYPE_RAW)
+            .build()
+
+
+// Create a data set
+
+
+// Create a data set
+        val stepCountDelta = 1000
+// For each data point, specify a start time, end time, and the data value -- in this case,
+// the number of new steps.
+// For each data point, specify a start time, end time, and the data value -- in this case,
+// the number of new steps.
+        val dataPoint: DataPoint = DataPoint.builder(dataSource)
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_STEPS, stepCountDelta)
+            .build()
+
+        val dataSet = DataSet.builder(dataSource)
+            .add(dataPoint)
+            .build()
+
+        val request = DataUpdateRequest.Builder()
+            .setDataSet(dataSet)
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        val response: Task<Void> = Fitness
+            .getHistoryClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
+            .updateData(request)
+
 
     }
 
