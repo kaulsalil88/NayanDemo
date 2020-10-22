@@ -55,7 +55,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private lateinit var sensor: Sensor;
     private lateinit var sensorManager: SensorManager
 
-    private var stepCountFromSensor: Int? = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,8 +82,10 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         mainBinding.stepBtRecord.setOnClickListener { startSensor() }
         mainBinding.stepBtUpdateServer.setOnClickListener {
             viewModel.updateStepCount(
-                mainBinding.stepEtCount.text.toString().toInt() + stepCountFromSensor!!
+                mainBinding.stepEtCount.text.toString().toInt()
+
             )
+            updateGoogleFitWithLatestStepCount()
         }
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
@@ -130,9 +131,9 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     }
 
     override fun onSensorChanged(p0: SensorEvent?) {
-        stepCountFromSensor = p0?.values?.get(0)?.toInt()
         mainBinding.stepEtCount.text =
-            (mainBinding.stepEtCount.text.toString().toInt() + stepCountFromSensor!!).toString()
+            (mainBinding.stepEtCount.text.toString().toInt() + p0?.values?.get(0)
+                ?.toInt()!!).toString()
 
     }
 
@@ -175,7 +176,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             )
         } else {
             getTotalSteps()
-            recordSteps()
+            //recordSteps()
         }
     }
 
@@ -186,7 +187,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             if (requestCode == PERMISSION_GOOGLE_SIGN_IN) {
                 startSensor()
                 getTotalSteps()
-                recordSteps()
+                //recordSteps()
             } else {
                 permissionNotGranted(this, "User didnt grant GOOGLE ACCOUNT permission")
             }
@@ -219,7 +220,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
 
     //This function turns on the sensor in the background which will increase the step count
-    private fun recordSteps() {
+    private fun updateGoogleFitnessStepCountInBackGround() {
         val recordingClient = Fitness.getRecordingClient(
             this,
             GoogleSignIn.getAccountForExtension(this, fitnessOptions)
@@ -241,6 +242,57 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     }
 
+    fun updateGoogleFitWithLatestStepCount() {
+        val cal: Calendar = Calendar.getInstance()
+        val now = Date()
+        cal.setTime(now)
+        cal.add(Calendar.MINUTE, 0)
+        val endTime: Long = cal.getTimeInMillis()
+        cal.add(Calendar.MINUTE, -50)
+        val startTime: Long = cal.getTimeInMillis()
+
+// Create a data source
+
+// Create a data source
+        val dataSource: DataSource = DataSource.Builder()
+            .setAppPackageName(this)
+            .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+            .setStreamName("MainActivity" + " - step count")
+            .setType(DataSource.TYPE_RAW)
+            .build()
+
+
+// Create a data set
+
+
+// Create a data set
+        val stepCountDelta = mainBinding.stepEtCount.text.toString().toInt()
+        Log.e("MainActivity", "Step Count Being Sent To Google Fitness API:$stepCountDelta")
+// For each data point, specify a start time, end time, and the data value -- in this case,
+// the number of new steps.
+// For each data point, specify a start time, end time, and the data value -- in this case,
+// the number of new steps.
+        val dataPoint: DataPoint = DataPoint.builder(dataSource)
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .setField(Field.FIELD_STEPS, stepCountDelta)
+            .build()
+
+        val dataSet = DataSet.builder(dataSource)
+            .add(dataPoint)
+            .build()
+
+        val request = DataUpdateRequest.Builder()
+            .setDataSet(dataSet)
+            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+            .build()
+
+        val response: Task<Void> = Fitness
+            .getHistoryClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
+            .updateData(request)
+            response.addOnCompleteListener { Log.e("MainActivity","Step Cound Updated") }
+
+
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -308,7 +360,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         )
     }
 
-    fun login() {
+    private fun login() {
         if (!TextUtils.isEmpty(mainBinding.etEmail.text) && !TextUtils.isEmpty(mainBinding.etPassword.text)) {
             viewModel.loginUser(
                 mainBinding.etEmail.text.toString(),
@@ -369,56 +421,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-
-    }
-
-    fun updateGoogleFitWithLatestStepCount(){
-        val cal: Calendar = Calendar.getInstance()
-        val now = Date()
-        cal.setTime(now)
-        cal.add(Calendar.MINUTE, 0)
-        val endTime: Long = cal.getTimeInMillis()
-        cal.add(Calendar.MINUTE, -50)
-        val startTime: Long = cal.getTimeInMillis()
-
-// Create a data source
-
-// Create a data source
-        val dataSource: DataSource = DataSource.Builder()
-            .setAppPackageName(this)
-            .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
-            .setStreamName("MainActivity" + " - step count")
-            .setType(DataSource.TYPE_RAW)
-            .build()
-
-
-// Create a data set
-
-
-// Create a data set
-        val stepCountDelta = 1000
-// For each data point, specify a start time, end time, and the data value -- in this case,
-// the number of new steps.
-// For each data point, specify a start time, end time, and the data value -- in this case,
-// the number of new steps.
-        val dataPoint: DataPoint = DataPoint.builder(dataSource)
-            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-            .setField(Field.FIELD_STEPS, stepCountDelta)
-            .build()
-
-        val dataSet = DataSet.builder(dataSource)
-            .add(dataPoint)
-            .build()
-
-        val request = DataUpdateRequest.Builder()
-            .setDataSet(dataSet)
-            .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
-            .build()
-
-        val response: Task<Void> = Fitness
-            .getHistoryClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
-            .updateData(request)
-
 
     }
 
