@@ -28,6 +28,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _loginResult = MutableLiveData<LoginResponse>()
     val loginResult: LiveData<LoginResponse> get() = _loginResult
 
+    private val _stepCount = MutableLiveData<StepCount>()
+    val stepCount: LiveData<StepCount> get() = _stepCount
+
     private val _userStepCount = MutableLiveData<UserStepCount>()
     val userStepCount: LiveData<UserStepCount> get() = _userStepCount
 
@@ -42,21 +45,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             getApplication<Application>().getSharedPreferences("myPref", Context.MODE_PRIVATE)
     }
 
-    fun getRepositories() {
-        coroutineScope.launch {
-            val deffered = StepCountApiService.retrofitService.getPopularAndroidRepoAsync()
-            try {
-                _status.value = GitApiStatus.LOADING
-                _result.value = deffered.await()
-                Log.e("MainViewModel", "Success" + result.value?.size)
-                _status.value = GitApiStatus.DONE
-
-            } catch (ex: Exception) {
-                onApiError(ex)
-            }
-
-        }
-    }
 
     fun loginUser(email: String, password: String) {
         coroutineScope.launch {
@@ -89,6 +77,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 _status.value = GitApiStatus.LOADING
                 _userStepCount.value = deferred?.await()
+                _status.value = GitApiStatus.DONE
+
+            } catch (ex: Exception) {
+                onApiError(ex)
+            }
+        }
+    }
+
+    fun updateStepCount(stepCount: Int) {
+        val app = getApplication<Application>()
+        coroutineScope.launch {
+            val deferred = sharedPreferences.getString(
+                app.getString(R.string.userid), ""
+            )?.let {
+                Log.d("MainViewMode user id ", it)
+                StepCountApiService.retrofitService.updateUserStepsAsync(
+                    sharedPreferences.getString(
+                        app.getString(R.string.token), ""
+                    )!!, it, StepCount(stepCount.toString())
+                )
+            }
+            try {
+                _status.value = GitApiStatus.LOADING
+                _stepCount.value = deferred?.await()
                 _status.value = GitApiStatus.DONE
 
             } catch (ex: Exception) {

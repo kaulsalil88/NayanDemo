@@ -1,8 +1,13 @@
 package com.example.nayandemo.activities
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
@@ -31,14 +36,23 @@ import java.util.concurrent.TimeUnit
 
 const val KEY_REPO_DATA = "REPO_DATA"
 
-class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
+class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback,
+    SensorEventListener {
 
 
+    private var isSensorPresent: Boolean = false
     private val MY_PERMISSIONS_REQUEST_ACTIVITY_RECOGNITION: Int = 100
     private val PERMISSION_GOOGLE_SIGN_IN: Int = 101
     private lateinit var fitnessOptions: FitnessOptions;
     private lateinit var viewModel: MainViewModel
     lateinit var mainBinding: ActivityMainBinding
+
+    //Sensor related variables
+    private lateinit var sensor: Sensor;
+    private lateinit var sensorManager: SensorManager
+
+    private var stepCountFromSensor: Int? = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -62,6 +76,20 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         mainBinding.pb.visibility = View.GONE
         toggleLoginScreenElementsVisibility(isLoggedIn())
         mainBinding.btLogin.setOnClickListener { login() }
+        mainBinding.stepBtRecord.setOnClickListener { }
+        mainBinding.stepBtUpdateServer.setOnClickListener {
+            viewModel.updateStepCount(
+                mainBinding.stepEtCount.text.toString().toInt() + stepCountFromSensor!!
+            )
+        }
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null) {
+            isSensorPresent = true
+            sensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        } else {
+            isSensorPresent = false
+        }
+        setUpObservers()
 
     }
 
@@ -71,14 +99,34 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             showServerResponse(it.toString())
             Log.d("MainActivity", it.toString())
             viewModel.saveInPref(it.userid, it.token)
+            toggleLoginScreenElementsVisibility(isLoggedIn())
+            checkActivityRecognitionAndGoogleSignIn()
         })
 
+        viewModel.stepCount.observe(this, Observer {
+            showServerResponse(it.toString())
+        })
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startSensor()
+
+    }
+
+    private fun startSensor() {
+        if (isLoggedIn() && isSensorPresent) {
+            if (isSensorPresent) {
+                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+            }
+        }
     }
 
     //Google Fit Related Code.
 
 
-    private fun updateStepCount() {
+    private fun checkActivityRecognitionAndGoogleSignIn() {
         //Check for the ACTIVITY_RECOGNITION
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
             != PackageManager.PERMISSION_GRANTED
@@ -91,6 +139,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             );
 
         } else {
+            startSensor()
             googleSignInAndAccessGoogleFitnessData()
         }
 
@@ -112,7 +161,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 fitnessOptions
             )
         } else {
-            //accessGoogleFit();
             getTotalSteps()
             recordSteps()
         }
@@ -123,7 +171,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
             if (requestCode == PERMISSION_GOOGLE_SIGN_IN) {
-                //accessGoogleFit()
+                startSensor()
                 getTotalSteps()
                 recordSteps()
             } else {
@@ -134,29 +182,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         }
     }
 
-    private fun accessGoogleFit() {
-        val cal: Calendar = Calendar.getInstance()
-        cal.setTime(Date())
-        val endTime: Long = cal.getTimeInMillis()
-        cal.add(Calendar.YEAR, -1)
-        val startTime: Long = cal.getTimeInMillis()
-        val readRequest = DataReadRequest.Builder()
-            .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-            .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-            .bucketByTime(1, TimeUnit.DAYS)
-            .build()
-        val account = GoogleSignIn
-            .getAccountForExtension(this, fitnessOptions)
-        Fitness.getHistoryClient(this, account)
-            .readData(readRequest)
-            .addOnSuccessListener { response ->
-                // Use response data here
-                Log.d("MainActivity", "OnSuccess()")
-
-            }
-            .addOnFailureListener { e -> Log.d("MainActivity", "OnFailure()", e) }
-    }
-
     //This function will fetch the current no of steps from the Google Fitness API .
     private fun getTotalSteps() {
         Fitness.getHistoryClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
@@ -165,7 +190,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 val totalSteps =
                     if (result.isEmpty) 0 else result.dataPoints[0].getValue(Field.FIELD_STEPS)
                         .asInt()
-                Log.e("MainActivity", "Step Count:" + totalSteps)
+                mainBinding.stepEtCount.text = totalSteps.toString()
             }
             .addOnFailureListener { e: Exception ->
                 Log.i(
@@ -175,9 +200,13 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             }
     }
 
+
     //This function turns on the sensor in the background which will increase the step count
     private fun recordSteps() {
-        Fitness.getRecordingClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
+        val recordingClient = Fitness.getRecordingClient(
+            this,
+            GoogleSignIn.getAccountForExtension(this, fitnessOptions)
+        )
             .subscribe(DataType.TYPE_STEP_COUNT_DELTA)
             .addOnSuccessListener { unused: Void? ->
                 Log.i(
@@ -192,6 +221,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                     "There was a problem subscribing."
                 )
             }
+
     }
 
 
@@ -230,6 +260,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             mainBinding.stepBtRecord.visibility = View.GONE
             mainBinding.stepEtLabel.visibility = View.GONE
             mainBinding.stepEtCount.visibility = View.GONE
+            mainBinding.stepSensorCount.visibility = View.GONE
+            mainBinding.stepBtUpdateServer.visibility = View.GONE
         } else {
             mainBinding.tvEmail.visibility = View.GONE
             mainBinding.tvPassword.visibility = View.GONE
@@ -240,6 +272,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             mainBinding.stepBtRecord.visibility = View.VISIBLE
             mainBinding.stepEtLabel.visibility = View.VISIBLE
             mainBinding.stepEtCount.visibility = View.VISIBLE
+            mainBinding.stepSensorCount.visibility = View.VISIBLE
+            mainBinding.stepBtUpdateServer.visibility = View.VISIBLE
 
         }
 
@@ -257,8 +291,11 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     }
 
     fun login() {
-        if (TextUtils.isEmpty(mainBinding.etEmail.text) && TextUtils.isEmpty(mainBinding.etPassword.text)) {
-            viewModel.loginUser(mainBinding.etEmail.text.toString(), mainBinding.etPassword.text.toString())
+        if (!TextUtils.isEmpty(mainBinding.etEmail.text) && !TextUtils.isEmpty(mainBinding.etPassword.text)) {
+            viewModel.loginUser(
+                mainBinding.etEmail.text.toString(),
+                mainBinding.etPassword.text.toString()
+            )
 
         } else {
             Toast.makeText(this, "Please enter both email and password", Toast.LENGTH_LONG).show()
@@ -266,21 +303,57 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     }
 
+
+    private fun unsubscribeFromGoogleFitness() {
+        if (this::fitnessOptions.isInitialized) {
+            Fitness.getRecordingClient(
+                this,
+                GoogleSignIn.getAccountForExtension(this, fitnessOptions)
+            )
+                .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)
+                .addOnSuccessListener { unused: Void? ->
+                    Log.i(
+                        "MainActivity",
+                        "Successfully unsubscribed."
+                    )
+                }
+                .addOnFailureListener { e: java.lang.Exception? ->
+                    // Subscription not removed
+                    Log.i("MainActivity", "Failed to unsubscribe.")
+                }
+        }
+
+    }
+
+    private fun unsubscribeFromSensor() {
+        if (isSensorPresent && this::sensor.isInitialized && this::sensorManager.isInitialized) {
+            sensorManager.unregisterListener(this)
+        }
+    }
+
+
+    override fun onPause() {
+        super.onPause()
+        unsubscribeFromGoogleFitness()
+        unsubscribeFromSensor()
+
+    }
+
     override fun onStop() {
         super.onStop()
         //Unsubscribe from the Google Fitness subscription
-        Fitness.getRecordingClient(this, GoogleSignIn.getAccountForExtension(this, fitnessOptions))
-            .unsubscribe(DataType.TYPE_STEP_COUNT_DELTA)
-            .addOnSuccessListener { unused: Void? ->
-                Log.i(
-                    "MainActivity",
-                    "Successfully unsubscribed."
-                )
-            }
-            .addOnFailureListener { e: java.lang.Exception? ->
-                // Subscription not removed
-                Log.i("MainActivity", "Failed to unsubscribe.")
-            }
+        unsubscribeFromGoogleFitness()
+
+    }
+
+
+    override fun onSensorChanged(p0: SensorEvent?) {
+        stepCountFromSensor = p0?.values?.get(0)?.toInt()
+
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
     }
 
 
