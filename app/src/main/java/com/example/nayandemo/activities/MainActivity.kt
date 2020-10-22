@@ -35,6 +35,10 @@ import java.util.concurrent.TimeUnit
 
 
 const val KEY_REPO_DATA = "REPO_DATA"
+const val PREF_NAME = "myPref"
+const val PREF_KEY_STEP_COUNT = "step_count"
+const val PREF_KEY_USER_ID = "userid"
+const val PREF_KEY_TOKEN = "token"
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback,
     SensorEventListener {
@@ -76,7 +80,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         mainBinding.pb.visibility = View.GONE
         toggleLoginScreenElementsVisibility(isLoggedIn())
         mainBinding.btLogin.setOnClickListener { login() }
-        mainBinding.stepBtRecord.setOnClickListener { }
+        mainBinding.stepBtRecord.setOnClickListener { startSensor() }
         mainBinding.stepBtUpdateServer.setOnClickListener {
             viewModel.updateStepCount(
                 mainBinding.stepEtCount.text.toString().toInt() + stepCountFromSensor!!
@@ -112,15 +116,24 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     override fun onResume() {
         super.onResume()
         startSensor()
+        mainBinding.stepEtCount.text =
+            getSharedPreferences(PREF_NAME, MODE_PRIVATE).getInt(PREF_KEY_STEP_COUNT, 0).toString()
 
     }
 
     private fun startSensor() {
         if (isLoggedIn() && isSensorPresent) {
             if (isSensorPresent) {
-                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+                sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
             }
         }
+    }
+
+    override fun onSensorChanged(p0: SensorEvent?) {
+        stepCountFromSensor = p0?.values?.get(0)?.toInt()
+        mainBinding.stepEtCount.text =
+            (mainBinding.stepEtCount.text.toString().toInt() + stepCountFromSensor!!).toString()
+
     }
 
     //Google Fit Related Code.
@@ -191,6 +204,10 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                     if (result.isEmpty) 0 else result.dataPoints[0].getValue(Field.FIELD_STEPS)
                         .asInt()
                 mainBinding.stepEtCount.text = totalSteps.toString()
+                //Save Step Count to shared Prefs so on app restart we can display the same
+                getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit()
+                    .putInt(PREF_KEY_STEP_COUNT, totalSteps)
+                    .apply()
             }
             .addOnFailureListener { e: Exception ->
                 Log.i(
@@ -283,8 +300,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     private fun isLoggedIn(): Boolean {
         return TextUtils.isEmpty(
-            getSharedPreferences("myPref", MODE_PRIVATE).getString(
-                getString(R.string.token),
+            getSharedPreferences(PREF_NAME, MODE_PRIVATE).getString(
+                PREF_KEY_TOKEN,
                 ""
             )
         )
@@ -342,15 +359,13 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     override fun onStop() {
         super.onStop()
         //Unsubscribe from the Google Fitness subscription
+        getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit()
+            .putInt("step_count", mainBinding.stepEtCount.text.toString().toInt())
+
         unsubscribeFromGoogleFitness()
-
+        unsubscribeFromSensor()
     }
 
-
-    override fun onSensorChanged(p0: SensorEvent?) {
-        stepCountFromSensor = p0?.values?.get(0)?.toInt()
-
-    }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
 

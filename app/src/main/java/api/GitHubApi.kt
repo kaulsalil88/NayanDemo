@@ -59,7 +59,7 @@ interface GitHubApi {
     fun updateUserStepsAsync(
         @Header("Bearer") token: String,
         @Path("userid") userId: String,
-        stepCount: StepCount
+        @Body stepCount: StepCount
     ): Deferred<StepCount>
 }
 

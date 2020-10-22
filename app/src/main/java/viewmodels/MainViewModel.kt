@@ -10,6 +10,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import api.*
 import com.example.nayandemo.R
+import com.example.nayandemo.activities.KEY_REPO_DATA
+import com.example.nayandemo.activities.PREF_KEY_TOKEN
+import com.example.nayandemo.activities.PREF_KEY_USER_ID
+import com.example.nayandemo.activities.PREF_NAME
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,7 +46,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         sharedPreferences =
-            getApplication<Application>().getSharedPreferences("myPref", Context.MODE_PRIVATE)
+            getApplication<Application>().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
 
@@ -65,12 +69,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         coroutineScope.launch {
             val deferred = sharedPreferences.getString(
-                app.getString(R.string.userid), ""
+                PREF_KEY_USER_ID, ""
             )?.let {
                 Log.d("MainViewMode user id ", it)
                 StepCountApiService.retrofitService.getUserAsync(
                     sharedPreferences.getString(
-                        app.getString(R.string.token), ""
+                        PREF_KEY_TOKEN, ""
                     )!!, it
                 )
             }
@@ -89,12 +93,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val app = getApplication<Application>()
         coroutineScope.launch {
             val deferred = sharedPreferences.getString(
-                app.getString(R.string.userid), ""
+                PREF_KEY_USER_ID, ""
             )?.let {
                 Log.d("MainViewMode user id ", it)
                 StepCountApiService.retrofitService.updateUserStepsAsync(
                     sharedPreferences.getString(
-                        app.getString(R.string.token), ""
+                        PREF_KEY_TOKEN, ""
                     )!!, it, StepCount(stepCount.toString())
                 )
             }
@@ -115,11 +119,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun saveInPref(userid: String?, token: String?): Unit {
-        val app = getApplication<Application>();
-
         sharedPreferences.edit {
-            putString(app.getString(R.string.userid), userid)
-            putString(app.getString(R.string.token), token)
+            putString(PREF_KEY_USER_ID, userid)
+            putString(PREF_KEY_TOKEN, token)
             apply()
         }
     }
@@ -127,8 +129,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getUserId(): String? {
         val app = getApplication<Application>();
-        val sharedPref = app.getSharedPreferences("myPref", Context.MODE_PRIVATE)
-        return sharedPref.getString(app.getString(R.string.userid), "")
+        val sharedPref = app.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return sharedPref.getString(PREF_KEY_USER_ID, "")
     }
 
 

@@ -1,5 +1,3 @@
 <resources>
     <string name="app_name">FitBitDemo</string>
-    <string name="userid">userid</string>
-    <string name="token">token</string>
 </resources>
